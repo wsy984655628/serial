@@ -17,11 +17,10 @@ LinkManager* LinkManager::instance()
 
 LinkManager::LinkManager(QObject *parent) : QObject(parent)
 {
-    m_mavlinkLoggingEnabled = true;
-    m_mavlinkDecoder = new MAVLinkDecoder(this);
+//    m_mavlinkDecoder = new MAVLinkDecoder(this);
     m_mavlinkProtocol = new MAVLINKProtocol();
     m_mavlinkProtocol->setConnectionManager(this);
-    connect(m_mavlinkProtocol,SIGNAL(messageReceived(mavlink_message_t)),m_mavlinkDecoder,SLOT(receiveMessage(mavlink_message_t)));
+//    connect(m_mavlinkProtocol,SIGNAL(messageReceived(mavlink_message_t)),m_mavlinkDecoder,SLOT(receiveMessage(mavlink_message_t)));
     connect(m_mavlinkProtocol,SIGNAL(messageReceived(mavlink_message_t)),this,SLOT(receiveMessage(mavlink_message_t)));
 }
 

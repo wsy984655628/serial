@@ -6,70 +6,17 @@
 
 #include "comm/gsmavlink.h"
 
-enum BatteryType
-{
-    NICD = 0,
-    NIMH = 1,
-    LIION = 2,
-    LIPOLY = 3,
-    LIFE = 4,
-    AGZN = 5
-}; ///< The type of battery used
-
 class UASInterface : public QObject
 {
     Q_OBJECT
 public:
     virtual ~UASInterface() {}
 
-    virtual void setHeartbeatEnabled(bool enabled) = 0;
-
     virtual int getUASID() const = 0;
     virtual double getRoll() const = 0;
     virtual double getPitch() const = 0;
     virtual double getYaw() const = 0;
 
-    virtual bool isArmed() const = 0;
-
-    virtual int getAirframe() const = 0;
-
-    enum CommStatus {
-        /** Unit is disconnected, no failure state reached so far **/
-        COMM_DISCONNECTED = 0,
-        /** The communication is established **/
-        COMM_CONNECTING = 1,
-        /** The communication link is up **/
-        COMM_CONNECTED = 2,
-        /** The connection is closed **/
-        COMM_DISCONNECTING = 3,
-        COMM_FAIL = 4,
-        COMM_TIMEDOUT = 5///< Communication link failed
-    };
-    enum Airframe {
-        QGC_AIRFRAME_GENERIC = 0,
-        QGC_AIRFRAME_EASYSTAR,
-        QGC_AIRFRAME_TWINSTAR,
-        QGC_AIRFRAME_MERLIN,
-        QGC_AIRFRAME_CHEETAH,
-        QGC_AIRFRAME_MIKROKOPTER,
-        QGC_AIRFRAME_REAPER,
-        QGC_AIRFRAME_PREDATOR,
-        QGC_AIRFRAME_COAXIAL,
-        QGC_AIRFRAME_PTERYX,
-        QGC_AIRFRAME_TRICOPTER,
-        QGC_AIRFRAME_HEXCOPTER,
-        QGC_AIRFRAME_X8,
-        QGC_AIRFRAME_VIPER_2_0,
-        QGC_AIRFRAME_CAMFLYER_Q,
-        QGC_AIRFRAME_HELICOPTER,
-        QGC_AIRFRAME_END_OF_ENUM
-    };
-
-    virtual bool systemCanReverse() const = 0;
-
-    virtual QString getSystemTypeName() = 0;
-
-    virtual QString getAutopilotTypeName() = 0;
     virtual void setAutopilotType(int apType) = 0;
 
 public slots:
@@ -150,8 +97,6 @@ signals:
     void armingChanged(int sysId, QString armingState);
     /** @brief A command has been issued **/
     void commandSent(int command);
-    /** @brief The connection status has changed **/
-    void connectionChanged(CommStatus connectionFlag);
     /** @brief The robot is connecting **/
     void connecting();
     /** @brief The robot is connected **/
@@ -162,8 +107,6 @@ signals:
     void activated();
     /** @brief The robot is inactive **/
     void deactivated();
-    /** @brief The robot is manually controlled **/
-    void manualControl();
 
     /** @brief A value of the robot has changed.
       *
@@ -225,8 +168,6 @@ signals:
 
     void navigationControllerErrorsChanged(UASInterface*, double altitudeError, double speedError, double xtrackError);
 
-    void imageStarted(int imgid, int width, int height, int depth, int channels);
-    void imageDataReceived(int imgid, const unsigned char* imageData, int length, int startIndex);
     /** @brief Emit the new system type */
     void systemTypeSet(UASInterface* uas, unsigned int type);
 
@@ -324,13 +265,7 @@ signals:
     /** @brief Range Finder update message*/
     void rangeFinderUpdate(UASInterface *uas, double distance, double voltage);
 
-    // Log Download Signals
-    void logEntry(int uasId, uint32_t time_utc, uint32_t size, uint16_t id, uint16_t num_logs, uint16_t last_log_num);
-    void logData(uint32_t uasId, uint32_t ofs, uint16_t id, uint8_t count, const char* data);
-
     void protocolStatusMessage(const QString& title, const QString& message);
-    //void valueChanged(const int uasId, const QString& name, const QString& unit, const QVariant& value, const quint64 msec);
-    //void textMessageReceived(int uasid, int componentid, int severity, const QString& text);
     void receiveLossChanged(int id,float value);
 
     void mavlinkMessageRecieved(mavlink_message_t message);

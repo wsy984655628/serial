@@ -28,7 +28,6 @@ HEADERS  += mainwindow.h \
     SerialCommunication/serialsettingdialog.h \
     comm/mavlinkdecoder.h \
     comm/gsmavlink.h \
-    comm/linkinterface.h \
     comm/linkmanager.h \
     comm/mavlinkprotocol.h \
     my_gs.h \

@@ -15,12 +15,7 @@ UASManager* UASManager::instance()
     return _instance;
 }
 
-UASManager::UASManager() :
-        activeUAS(NULL),
-        homeLat(32.835354),
-        homeLon(-117.162774),
-        homeAlt(25.0),
-        homeFrame(MAV_FRAME_GLOBAL)
+UASManager::UASManager()
 {
 }
 

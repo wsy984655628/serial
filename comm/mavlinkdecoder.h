@@ -5,10 +5,8 @@
 #include <QThread>
 #include <QMap>
 #include <QVector>
-
-#include "linkinterface.h"
-//#include "uas/uasmanager.h"
-
+#include <QPair>
+#include <QVariant>
 #include "Mavlink/v1.0/ardupilotmega/mavlink.h"
 
 class ConnectionManager;
@@ -27,7 +25,6 @@ public:
     quint64 getUnixTimeFromMs(int systemID, quint64 time);
 
 signals:
-    void protocolStatusMessage(const QString& title, const QString& message);
     void valueChanged(const int uasId, const QString& name, const QString& unit, const QVariant& value, const quint64 msec);
     void textMessageReceived(int uasid, int componentid, int severity, const QString& text);
     void receiveLossChanged(int id,float value);
@@ -41,12 +38,7 @@ private:
     int getSystemId() { return 252; }
     int getComponentId() { return 1; }
 
-    bool m_loggingEnabled;
-    QFile *m_logfile;
     ConnectionManager *m_connectionManager;
-    bool m_throwAwayGCSPackets;
-    bool m_enable_version_check;
-    bool versionMismatchIgnore;
     QMap<int,qint64> totalReceiveCounter;
     QMap<int,qint64> currReceiveCounter;
     QMap<int,QMap<int,uint8_t> > lastIndex;

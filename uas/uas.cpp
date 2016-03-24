@@ -17,95 +17,20 @@
 
 #include <QDebug>
 
-const double UAS::lipoFull = 4.2f;  ///< 100% charged voltage
-const double UAS::LipoEmpty = 3.5f; ///< Discharged voltage
-
-
-/**
-* Gets the settings from the previous UAS (name, airframe, autopilot, battery specs)
-* by calling readSettings. This means the new UAS will have the same settings
-* as the previous one created unless one calls deleteSettings in the code after
-* creating the UAS.
-*/
 UAS::UAS(MAVLINKProtocol* protocol, int id) : UASInterface(),
    uasId(id),
    unknownPackets(),
-   commStatus(COMM_DISCONNECTED),
-   receiveDropRate(0),
-   sendDropRate(0),
-   statusTimeout(new QTimer(this)),
 
    name(""),
    type(-1),
-   airframe(-1),
    autopilot(-1),
-   systemIsArmed(false),
    base_mode(-1),
    // custom_mode not initialized
    custom_mode(-1),
    status(-1),
-   // shortModeText not initialized
-   // shortStateText not initialized
 
-   // actuatorValues not initialized
-   // actuatorNames not initialized
-   // motorValues not initialized
-   // motorNames mnot initialized
-   thrustSum(0),
-   thrustMax(10),
-
-   // batteryType not initialized
-   // cells not initialized
-   // fullVoltage not initialized
-   // emptyVoltage not initialized
-   startVoltage(-1.0),
-   tickVoltage(10.5),
-   lastTickVoltageValue(13.0),
-   tickLowpassVoltage(12.0),
-   warnVoltage(9.5),
-   warnLevelPercent(20.0),
-   currentVoltage(12.6),
-   lpVoltage(12.0),
-   currentCurrent(0.4),
-   batteryRemainingEstimateEnabled(true),
-   // chargeLevel not initialized
-   // timeRemaining  not initialized
-   lowBattAlarm(false),
-
-   startTime(My_GS::groundTimeMilliseconds()),
    onboardTimeOffset(0),
 
-   manualControl(false),
-   overrideRC(false),
-
-   positionLock(false),
-   isLocalPositionKnown(false),
-   isGlobalPositionKnown(false),
-
-   localX(0.0),
-   localY(0.0),
-   localZ(0.0),
-   latitude(0.0),
-   longitude(0.0),
-   altitudeAMSL(0.0),
-   altitudeRelative(0.0),
-
-   globalEstimatorActive(false),
-   latitude_gps(0.0),
-   longitude_gps(0.0),
-   altitude_gps(0.0),
-
-   speedX(0.0),
-   speedY(0.0),
-   speedZ(0.0),
-
-   nedPosGlobalOffset(0,0,0),
-   nedAttGlobalOffset(0,0,0),
-
-   airSpeed(std::numeric_limits<double>::quiet_NaN()),
-   groundSpeed(std::numeric_limits<double>::quiet_NaN()),
-
-   attitudeKnown(false),
    attitudeStamped(false),
    lastAttitude(0),
 
@@ -113,21 +38,8 @@ UAS::UAS(MAVLINKProtocol* protocol, int id) : UASInterface(),
    pitch(0.0),
    yaw(0.0),
 
-   blockHomePositionChanges(false),
-   receivedMode(false),
-
-
-   paramsOnceRequested(false),
-
    // The protected members.
-   connectionLost(false),
-   lastVoltageWarning(0),
-   lastNonNullTime(0),
-   onboardTimeOffsetInvalidCount(0),
-   hilEnabled(false),
-   sensorHil(false),
-   lastSendTimeGPS(0),
-   lastSendTimeSensors(0)
+   lastNonNullTime(0)
 {
    Q_UNUSED(protocol);
 
@@ -136,21 +48,10 @@ UAS::UAS(MAVLINKProtocol* protocol, int id) : UASInterface(),
        componentID[i] = -1;
        componentMulti[i] = false;
    }
-   statusTimeout->start(500);
-   // Initial signals
-//   emit disarmed();
-//   emit armingChanged(false);
-
    systemId = My_GS::defaultSystemId;
    componentId = My_GS::defaultComponentId;
-   m_heartbeatsEnabled = true;
-//   m_heartbeatsEnabled = MainWindow::instance()->heartbeatEnabled(); //Default to sending heartbeats
    QTimer *heartbeattimer = new QTimer(this);
-//   connect(heartbeattimer,SIGNAL(timeout()),this,SLOT(sendHeartbeat()));
    heartbeattimer->start(MAVLINK_HEARTBEAT_DEFAULT_RATE * 1000);
-
-//   m_parameterSendTimer.setInterval(20);
-//   connect(&m_parameterSendTimer, SIGNAL(timeout()), this, SLOT(requestNextParamFromQueue()));
 }
 
 /**
@@ -159,7 +60,6 @@ UAS::UAS(MAVLINKProtocol* protocol, int id) : UASInterface(),
 */
 UAS::~UAS()
 {
-   delete statusTimeout;
 }
 
 
@@ -176,8 +76,6 @@ void UAS::receiveMessage( mavlink_message_t message)
        {
        case MAVLINK_MSG_ID_HEARTBEAT:
        {
-
-           lastHeartbeat = My_GS::groundTimeUsecs();
            emit heartbeat(this);
            mavlink_heartbeat_t state;
            mavlink_msg_heartbeat_decode(&message, &state);
@@ -202,7 +100,6 @@ void UAS::receiveMessage( mavlink_message_t message)
            setPitch(My_GS::limitAngleToPMPIf(attitude.pitch));
            setYaw(My_GS::limitAngleToPMPIf(attitude.yaw));
 
-           attitudeKnown = true;
            emit attitudeChanged(this, getRoll(), getPitch(), getYaw(), time);
            emit attitudeRotationRatesChanged(uasId, attitude.rollspeed, attitude.pitchspeed, attitude.yawspeed, time);
 

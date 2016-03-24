@@ -5,8 +5,6 @@
 
 MAVLINKProtocol::MAVLINKProtocol():
     m_isOnline(true),
-    m_loggingEnabled(false),
-    m_logfile(NULL),
     m_connectionManager(NULL)
 {
 
@@ -30,46 +28,11 @@ void MAVLINKProtocol::receiveBytes( QByteArray b)
 
     int linkId = 0;
 
-    static int mavlink09Count = 0;
-    static int nonmavlinkCount = 0;
-    static bool decodeFirstPacket = false;
-    static bool warnedUser = false;
-    static bool checkedUserNonMavlink = false;
-    static bool warnedUserNonMavlink = false;
-
     for (int position = 0; position < b.size(); position++){
         unsigned int decodeState = mavlink_parse_char(linkId,(uint8_t)(b[position]),&message, &status);
-        if((uint8_t)b[position] == 0x55) mavlink09Count++;
-        if((mavlink09Count > 100) && !decodeFirstPacket && !warnedUser)
-        {
-            warnedUser = true;            
-            emit protocolStatusMessage("MAVLink Version or Baud Rate Mismatch" , "MAVLink Version or Baud Rate Mismatch");
-        }
-
-        if (decodeState == 0 && !decodeFirstPacket)
-        {
-            nonmavlinkCount++;
-            if (nonmavlinkCount > 2000 && !warnedUserNonMavlink)
-            {
-                //500 bytes with no mavlink message.
-                if(!checkedUserNonMavlink)
-                {
-//                    link->requestReset();
-                    nonmavlinkCount = 0;
-                    checkedUserNonMavlink = true;                 
-                }
-                else
-                {                     
-                    warnedUserNonMavlink = true;
-                    emit protocolStatusMessage("Mavlink Baud Rate Mismatch", "Mavlink Baud Rate Mismatch");
-                }
-            }
-        }
 
         if (decodeState == 1)
-        {                             
-            decodeFirstPacket = true;
-
+        {
             if(message.msgid == MAVLINK_MSG_ID_PING)
             {
                 // process ping requests (tgt_system and tgt_comp must be zero)
@@ -106,28 +69,10 @@ void MAVLINKProtocol::handleMessage(quint64 timeid)
 
     if (uas == NULL && message.msgid == MAVLINK_MSG_ID_HEARTBEAT)
     {
-
-        if (message.sysid == getSystemId())
-        {
-            if (m_throwAwayGCSPackets)
-            {
-                return;
-            }
-        }
         mavlink_heartbeat_t heartbeat;
         heartbeat.mavlink_version = 0;
         mavlink_msg_heartbeat_decode(&message, &heartbeat);
 
-        if(m_enable_version_check && heartbeat.mavlink_version != MAVLINK_VERSION)
-        {
-            if (!versionMismatchIgnore)
-            {
-                emit protocolStatusMessage(tr("The MAVLink protocol version on the MAV and APM Planner mismatch!"),
-                                           tr("It is unsafe to use different MAVLink versions. APM Planner therefore refuses to connect to system %1, which sends MAVLink version %2 (APM Planner uses version %3).").arg(message.sysid).arg(heartbeat.mavlink_version).arg(MAVLINK_VERSION));
-                versionMismatchIgnore = true;
-            }
-            return;
-        }
         qDebug() << "creat uas" << uas;
         uas = m_connectionManager->createUAS(this, message.sysid,&heartbeat);
     }

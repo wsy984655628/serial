@@ -21,23 +21,15 @@ public:
     UASInterface* createUAS(MAVLINKProtocol* mavlink, int sysid, mavlink_heartbeat_t* heartbeat, QObject* parent=NULL);
 
 signals:
-    void protocolStatusMessage(QString title,QString text);
-
-    /** @brief aggregated signal for when link status changes */
-
     void messageReceived(mavlink_message_t message);
 
 public slots:
     void receiveMessage(mavlink_message_t message);
 
 private:
-    QMap<int,LinkInterface*> m_connectionMap;
     QMap<int,UASInterface*> m_uasMap;
-    QMap<QString,int> m_portToBaudMap;
     MAVLinkDecoder *m_mavlinkDecoder;
     MAVLINKProtocol *m_mavlinkProtocol;
-    QString m_logSubDir;
-    bool m_mavlinkLoggingEnabled;
 };
 
 #endif // LINKMANAGER_H
